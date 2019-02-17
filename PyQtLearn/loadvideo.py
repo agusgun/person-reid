@@ -20,6 +20,8 @@ class InputThread(QThread):
         super().__init__()
         self.is_running = True
         self.video = video
+        self.ret = None
+        self.cap = None
 
     def run(self):
         if self.video:
@@ -37,14 +39,15 @@ class InputThread(QThread):
 
         self.cap.release()
 
-
     def set_file_name(self, file_name):
         self.file_name = file_name
     
-    def get_frame(self):
+    def get_capture(self):
         if self.ret:
-            return self.frame
-    
+            return self.ret, self.frame
+        else:
+            return None, None
+
     def set_video(self, video):
         self.video = video
 
@@ -97,14 +100,61 @@ class InputTab(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(self.input_widget)
         self.setLayout(layout)
-    
+
+class DetectionTrackingThread(QThread):
+    changePixmap = pyqtSignal(QImage)
+
+    def __init__(self, input_thread):
+        super().__init__()
+        self.is_running = True
+        self.input_thread = input_thread
+
+    def run(self):
+        while True and self.is_running:
+            ret, frame = self.input_thread.get_capture()
+            if ret:
+                rgbImage = cv.cvtColor(frame, cv.COLOR_BGR2RGB)
+                convertToQtFormat = QImage(rgbImage.data, rgbImage.shape[1], rgbImage.shape[0], QImage.Format_RGB888)
+                p = convertToQtFormat.scaled(640, 480, Qt.KeepAspectRatio)
+                self.changePixmap.emit(p)
+                self.msleep(1000)
+
+    def signal_start(self):
+        self.is_running = True
+        self.start()
+
+    def signal_stop(self):
+        self.is_running = False
+
+class DetectionTrackingTab(QWidget):
+    def __init__(self, input_thread, parent=None):
+        super(DetectionTrackingTab, self).__init__(parent)
+        self.input_thread = input_thread
+
+        self.label = QLabel()
+        self.label.resize(640, 480)
+
+        self.layout = QVBoxLayout()
+        self.layout.addWidget(self.label)
+        self.layout.addWidget(QPushButton('hehe'))
+        self.setLayout(self.layout)        
+
+        self.th_detection_tracking = DetectionTrackingThread(input_thread)
+        self.th_detection_tracking.changePixmap.connect(self.setImage)
+        # self.th_detection_tracking.start()
+
+    @pyqtSlot(QImage)
+    def setImage(self, image):
+        self.label.setPixmap(QPixmap.fromImage(image))
+
+
 class TabWidget(QWidget):
     def __init__(self, parent=None):
         super(TabWidget, self).__init__(parent)
 
         self.tabs = QTabWidget()
         self.input_tab = InputTab()
-        self.detection_tracking_tab = QWidget()
+        self.detection_tracking_tab = DetectionTrackingTab(self.input_tab.input_widget.th_input)
         self.reid_tab = QWidget()
         self.tabs.addTab(self.input_tab, "Input")
         self.tabs.addTab(self.detection_tracking_tab, "Detection and Tracking")
@@ -155,6 +205,7 @@ class MainWindow(QMainWindow):
 
     def use_camera(self):
         self.tabs.input_tab.input_widget.start_camera()
+        self.tabs.detection_tracking_tab.th_detection_tracking.signal_start()
 
     def open_file(self):
         self.tabs.input_tab.input_widget.start_video()
