@@ -58,7 +58,7 @@ class VideoThread(QThread):
                 p = convertToQtFormat.scaled(640, 480, Qt.KeepAspectRatio)
                 self.changePixmap.emit(p)
             # Add Delay
-            self.msleep(30)
+            self.msleep(40)
         cap.release()
 
     def signal_start(self):
@@ -66,6 +66,69 @@ class VideoThread(QThread):
 
     def signal_stop(self):
         self.is_running = False
+
+
+class InputWidget(QWidget):
+    def __init__(self, parent=None):
+        super(InputWidget, self).__init__(parent)
+
+        self.label = QLabel()
+        self.label.resize(640, 480)
+
+        self.th_camera = CameraThread()
+        self.th_camera.changePixmap.connect(self.setImage)
+        self.th_video = VideoThread()
+        self.th_video.changePixmap.connect(self.setImage)
+
+        self.layout = QVBoxLayout()
+        self.layout.addWidget(self.label)
+        self.setLayout(self.layout)
+    
+    @pyqtSlot(QImage)
+    def setImage(self, image):
+        self.label.setPixmap(QPixmap.fromImage(image))
+
+    def start_camera(self):
+        self.th_video.signal_stop()
+        self.th_camera.signal_start()
+        self.th_camera.start()
+
+    def start_video(self):
+        self.th_camera.signal_stop()
+        file_name, _ = QFileDialog.getOpenFileName(self, "Open Video",
+            QDir.homePath())
+        if file_name != '':
+            self.th_video.set_file_name(file_name)
+            self.th_video.signal_start()
+            self.th_video.start()
+
+class InputTab(QWidget):
+    def __init__(self, parent=None):
+        super(InputTab, self).__init__(parent)
+
+        self.input_widget = InputWidget()
+        layout = QVBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(self.input_widget)
+        self.setLayout(layout)
+    
+class TabWidget(QWidget):
+    def __init__(self, parent=None):
+        super(TabWidget, self).__init__(parent)
+
+        self.tabs = QTabWidget()
+        self.input_tab = InputTab()
+        self.detection_tracking_tab = QWidget()
+        self.reid_tab = QWidget()
+        self.tabs.addTab(self.input_tab, "Input")
+        self.tabs.addTab(self.detection_tracking_tab, "Detection and Tracking")
+        self.tabs.addTab(self.reid_tab, "Re-identification")
+
+        layout = QVBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(self.tabs)
+        self.setLayout(layout)
+
 
 class MainWindow(QMainWindow):
     
@@ -95,52 +158,20 @@ class MainWindow(QMainWindow):
         file_menu.addAction(open_action)
         file_menu.addAction(exit_action)
 
-        # Tab
-        self.tabs = QTabWidget()
-        self.tab1 = QWidget()
-        self.tab2 = QWidget()
-        self.tab3 = QWidget()
-        self.tabs.addTab(self.tab1, "Input")
-        self.tabs.addTab(self.tab2, "Detection and Tracking")
-        self.tabs.addTab(self.tab3, "Re-identification")
+        self.tabs = TabWidget()
 
-
-        # Central Widget
         layout = QVBoxLayout()
-
-        self.label = QLabel()
-        self.label.resize(640, 480)
-
-        self.th_camera = CameraThread()
-        self.th_camera.changePixmap.connect(self.setImage)
-        self.th_video = VideoThread()
-        self.th_video.changePixmap.connect(self.setImage)
-        
         layout.addWidget(self.tabs)
-        layout.addWidget(self.label)
 
-        # Apply Layout
         wid = QWidget(self)
         self.setCentralWidget(wid)
         wid.setLayout(layout)
 
-    @pyqtSlot(QImage)
-    def setImage(self, image):
-        self.label.setPixmap(QPixmap.fromImage(image))
-
     def use_camera(self):
-        self.th_video.signal_stop()
-        self.th_camera.signal_start()
-        self.th_camera.start()
+        self.tabs.input_tab.input_widget.start_camera()
 
     def open_file(self):
-        self.th_camera.signal_stop()
-        file_name, _ = QFileDialog.getOpenFileName(self, "Open Video",
-            QDir.homePath())
-        if file_name != '':
-            self.th_video.set_file_name(file_name)
-            self.th_video.signal_start()
-            self.th_video.start()
+        self.tabs.input_tab.input_widget.start_video()
 
     def exit_call(self):
         sys.exit(app.exec_())
