@@ -1,0 +1,6 @@
+{
+    "python.pythonPath": "/home/agusgun/anaconda3/envs/basic/bin/python",
+    "python.linting.pylintEnabled": true,
+    "python.linting.enabled": true,
+    "python.linting.pydocstyleEnabled": false
+}
