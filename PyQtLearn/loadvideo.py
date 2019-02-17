@@ -5,59 +5,80 @@ from PyQt5.QtCore import QDir, Qt, QUrl, QThread, pyqtSignal, pyqtSlot
 from PyQt5.QtMultimedia import QMediaContent, QMediaPlayer
 from PyQt5.QtMultimediaWidgets import QVideoWidget
 from PyQt5.QtWidgets import (QApplication, QFileDialog, QHBoxLayout, QLabel,
-        QPushButton, QSizePolicy, QSlider, QStyle, QVBoxLayout, QWidget)
+        QPushButton, QSizePolicy, QSlider, QStyle, QVBoxLayout, QWidget, QTabWidget)
 from PyQt5.QtWidgets import QMainWindow,QWidget, QPushButton, QAction
 from PyQt5.QtGui import QIcon, QPixmap, QImage
 import sys
 import os
-import cv2
+import cv2 as cv
+
 
 # Video Thread
-class Thread(QThread):
+class CameraThread(QThread):
     changePixmap = pyqtSignal(QImage)
 
+    def __init__(self):
+        super().__init__()
+        self.is_running = True
+
     def run(self):
-        cap = cv2.VideoCapture(0)
-        while True:
+        cap = cv.VideoCapture(0)
+        while True and self.is_running:
             ret, frame = cap.read()
             if ret:
-                rgbImage = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                rgbImage = cv.cvtColor(frame, cv.COLOR_BGR2RGB)
                 convertToQtFormat = QImage(rgbImage.data, rgbImage.shape[1], rgbImage.shape[0], QImage.Format_RGB888)
                 p = convertToQtFormat.scaled(640, 480, Qt.KeepAspectRatio)
                 self.changePixmap.emit(p)
+        cap.release()
 
-class VideoWindow(QMainWindow):
+    def signal_start(self):
+        self.is_running = True
+
+    def signal_stop(self):
+        self.is_running = False
+
+class VideoThread(QThread):
+    changePixmap = pyqtSignal(QImage)
+
+    def __init__(self):
+        super().__init__()
+        self.is_running = True
+
+    def set_file_name(self, file_name):
+        self.file_name = file_name
+    
+    def run(self):
+        cap = cv.VideoCapture(self.file_name)
+        while True and self.is_running:
+            ret, frame = cap.read()
+            if ret:
+                rgbImage = cv.cvtColor(frame, cv.COLOR_BGR2RGB)
+                convertToQtFormat = QImage(rgbImage.data, rgbImage.shape[1], rgbImage.shape[0], QImage.Format_RGB888)
+                p = convertToQtFormat.scaled(640, 480, Qt.KeepAspectRatio)
+                self.changePixmap.emit(p)
+            # Add Delay
+            self.msleep(30)
+        cap.release()
+
+    def signal_start(self):
+        self.is_running = True
+
+    def signal_stop(self):
+        self.is_running = False
+
+class MainWindow(QMainWindow):
     
     def __init__(self, parent=None):
-        super(VideoWindow, self).__init__(parent)
+        super(MainWindow, self).__init__(parent)
         self.setWindowTitle("Person Re-ID")
 
-        # Video & Media Player        
-        video_widget = QVideoWidget()
-
-        self.media_player = QMediaPlayer(None, QMediaPlayer.VideoSurface)
-        self.media_player.setVideoOutput(video_widget)
-        self.media_player.stateChanged.connect(self.media_state_changed)
-        self.media_player.positionChanged.connect(self.position_changed)
-        self.media_player.durationChanged.connect(self.duration_changed)
-        self.media_player.error.connect(self.handle_error)
-
-        # Play Button
-        self.play_button = QPushButton()
-        self.play_button.setEnabled(False)
-        self.play_button.setIcon(self.style().standardIcon(QStyle.SP_MediaPlay))
-        self.play_button.clicked.connect(self.play)
-
-        # Slider Frame
-        self.position_slider = QSlider(Qt.Horizontal)
-        self.position_slider.setRange(0, 0)
-        self.position_slider.sliderMoved.connect(self.set_position)
-
-        # Error Label
-        self.error_label = QLabel()
-        self.error_label.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
-
         # Menu Bar
+        use_camera_action = QAction(QIcon('camera.png'), '&Use Camera', self)
+        use_camera_action.setShortcut('Ctrl+E')
+        use_camera_action.setStatusTip('Use camera')
+        use_camera_action.triggered.connect(self.use_camera)
+
         open_action = QAction(QIcon('open.png'), '&Open', self)
         open_action.setShortcut('Ctrl+O')
         open_action.setStatusTip('Open video')
@@ -70,27 +91,32 @@ class VideoWindow(QMainWindow):
 
         menu_bar = self.menuBar()
         file_menu = menu_bar.addMenu('&File')
+        file_menu.addAction(use_camera_action)
         file_menu.addAction(open_action)
         file_menu.addAction(exit_action)
 
-        # Layout
-        control_layout = QHBoxLayout()
-        control_layout.setContentsMargins(0, 0, 0, 0)
-        control_layout.addWidget(self.play_button)
-        control_layout.addWidget(self.position_slider)
+        # Tab
+        self.tabs = QTabWidget()
+        self.tab1 = QWidget()
+        self.tab2 = QWidget()
+        self.tab3 = QWidget()
+        self.tabs.addTab(self.tab1, "Input")
+        self.tabs.addTab(self.tab2, "Detection and Tracking")
+        self.tabs.addTab(self.tab3, "Re-identification")
 
+
+        # Central Widget
         layout = QVBoxLayout()
-        layout.addWidget(video_widget)
-        layout.addLayout(control_layout)
-        layout.addWidget(self.error_label)
 
-        # Add Use Camera
         self.label = QLabel()
         self.label.resize(640, 480)
-        th = Thread(self)
-        th.changePixmap.connect(self.setImage)
-        th.start()
 
+        self.th_camera = CameraThread()
+        self.th_camera.changePixmap.connect(self.setImage)
+        self.th_video = VideoThread()
+        self.th_video.changePixmap.connect(self.setImage)
+        
+        layout.addWidget(self.tabs)
         layout.addWidget(self.label)
 
         # Apply Layout
@@ -102,50 +128,26 @@ class VideoWindow(QMainWindow):
     def setImage(self, image):
         self.label.setPixmap(QPixmap.fromImage(image))
 
-    def play(self):
-        if self.media_player.state() == QMediaPlayer.PlayingState:
-            self.media_player.pause()
-        else:
-            self.media_player.play()
-
-    def set_position(self, position):
-        self.media_player.setPosition(position)
+    def use_camera(self):
+        self.th_video.signal_stop()
+        self.th_camera.signal_start()
+        self.th_camera.start()
 
     def open_file(self):
+        self.th_camera.signal_stop()
         file_name, _ = QFileDialog.getOpenFileName(self, "Open Video",
             QDir.homePath())
         if file_name != '':
-            self.media_player.setMedia(
-                QMediaContent(QUrl.fromLocalFile(file_name)))
-            self.play_button.setEnabled(True)
+            self.th_video.set_file_name(file_name)
+            self.th_video.signal_start()
+            self.th_video.start()
 
     def exit_call(self):
         sys.exit(app.exec_())
 
-    def media_state_changed(self, state):
-        if self.media_player.state() == QMediaPlayer.PlayingState:
-            self.play_button.setIcon(
-                self.style().standardIcon(QStyle.SP_MediaPause)
-            )
-        else:
-            self.play_button.setIcon(
-                self.style().standardIcon(QStyle.SP_MediaPlay)
-            )
-
-    def position_changed(self, position):
-        self.position_slider.setValue(position)
-
-    def duration_changed(self, duration):
-        self.position_slider.setRange(0, duration)
-    
-    def handle_error(self):
-        self.play_button.setEnabled(False)
-        self.error_label.setText("Error: " + self.media_player.errorString())
-
-
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    player = VideoWindow()
+    player = MainWindow()
     player.resize(640, 480)
     player.show()
     sys.exit(app.exec_())
