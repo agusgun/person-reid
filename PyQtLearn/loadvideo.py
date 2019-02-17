@@ -13,60 +13,46 @@ import os
 import cv2 as cv
 
 
-# Video Thread
-class CameraThread(QThread):
+class InputThread(QThread):
     changePixmap = pyqtSignal(QImage)
 
-    def __init__(self):
+    def __init__(self, video=False):
         super().__init__()
         self.is_running = True
+        self.video = video
 
     def run(self):
-        cap = cv.VideoCapture(0)
+        if self.video:
+            self.cap = cv.VideoCapture(self.file_name)
+        else:
+            self.cap = cv.VideoCapture(0)
         while True and self.is_running:
-            ret, frame = cap.read()
-            if ret:
-                rgbImage = cv.cvtColor(frame, cv.COLOR_BGR2RGB)
+            self.ret, self.frame = self.cap.read()
+            if self.ret:
+                rgbImage = cv.cvtColor(self.frame, cv.COLOR_BGR2RGB)
                 convertToQtFormat = QImage(rgbImage.data, rgbImage.shape[1], rgbImage.shape[0], QImage.Format_RGB888)
                 p = convertToQtFormat.scaled(640, 480, Qt.KeepAspectRatio)
                 self.changePixmap.emit(p)
-        cap.release()
+                self.msleep(40)
 
-    def signal_start(self):
-        self.is_running = True
+        self.cap.release()
 
-    def signal_stop(self):
-        self.is_running = False
-
-class VideoThread(QThread):
-    changePixmap = pyqtSignal(QImage)
-
-    def __init__(self):
-        super().__init__()
-        self.is_running = True
 
     def set_file_name(self, file_name):
         self.file_name = file_name
     
-    def run(self):
-        cap = cv.VideoCapture(self.file_name)
-        while True and self.is_running:
-            ret, frame = cap.read()
-            if ret:
-                rgbImage = cv.cvtColor(frame, cv.COLOR_BGR2RGB)
-                convertToQtFormat = QImage(rgbImage.data, rgbImage.shape[1], rgbImage.shape[0], QImage.Format_RGB888)
-                p = convertToQtFormat.scaled(640, 480, Qt.KeepAspectRatio)
-                self.changePixmap.emit(p)
-            # Add Delay
-            self.msleep(40)
-        cap.release()
+    def get_frame(self):
+        if self.ret:
+            return self.frame
+    
+    def set_video(self, video):
+        self.video = video
 
     def signal_start(self):
         self.is_running = True
 
     def signal_stop(self):
         self.is_running = False
-
 
 class InputWidget(QWidget):
     def __init__(self, parent=None):
@@ -75,11 +61,9 @@ class InputWidget(QWidget):
         self.label = QLabel()
         self.label.resize(640, 480)
 
-        self.th_camera = CameraThread()
-        self.th_camera.changePixmap.connect(self.setImage)
-        self.th_video = VideoThread()
-        self.th_video.changePixmap.connect(self.setImage)
-
+        self.th_input = InputThread()
+        self.th_input.changePixmap.connect(self.setImage)
+        
         self.layout = QVBoxLayout()
         self.layout.addWidget(self.label)
         self.setLayout(self.layout)
@@ -89,18 +73,20 @@ class InputWidget(QWidget):
         self.label.setPixmap(QPixmap.fromImage(image))
 
     def start_camera(self):
-        self.th_video.signal_stop()
-        self.th_camera.signal_start()
-        self.th_camera.start()
+        self.th_input.signal_stop()
+        self.th_input.set_video(False)
+        self.th_input.signal_start()
+        self.th_input.start()
 
     def start_video(self):
-        self.th_camera.signal_stop()
+        self.th_input.signal_stop()
         file_name, _ = QFileDialog.getOpenFileName(self, "Open Video",
             QDir.homePath())
         if file_name != '':
-            self.th_video.set_file_name(file_name)
-            self.th_video.signal_start()
-            self.th_video.start()
+            self.th_input.set_file_name(file_name)
+            self.th_input.set_video(True)
+            self.th_input.signal_start()
+            self.th_input.start()
 
 class InputTab(QWidget):
     def __init__(self, parent=None):
