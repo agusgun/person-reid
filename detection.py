@@ -4,16 +4,18 @@ import sys
 import numpy as np
 import os.path
 
-# Initialize the parameters
-confThreshold = 0.5  #Confidence threshold
-nmsThreshold = 0.4   #Non-maximum suppression threshold
-inpWidth = 416       #Width of network's input image
-inpHeight = 416      #Height of network's input image
 
 parser = argparse.ArgumentParser(description='Object Detection using YOLO in OPENCV')
 parser.add_argument('--image', help='Path to image file.')
 parser.add_argument('--video', help='Path to video file.')
 args = parser.parse_args()
+
+
+# Initialize the parameters
+confThreshold = 0.5  #Confidence threshold
+nmsThreshold = 0.4   #Non-maximum suppression threshold
+inpWidth = 416       #Width of network's input image
+inpHeight = 416      #Height of network's input image
 
 # Load names of classes
 classesFile = "coco.names";
@@ -29,7 +31,6 @@ net = cv.dnn.readNetFromDarknet(modelConfiguration, modelWeights)
 net.setPreferableBackend(cv.dnn.DNN_BACKEND_OPENCV)
 net.setPreferableTarget(cv.dnn.DNN_TARGET_CPU)
 
-
 # Get the names of the output layers
 def getOutputsNames(net):
     # Get the names of all the layers in the network
@@ -38,9 +39,9 @@ def getOutputsNames(net):
     return [layersNames[i[0] - 1] for i in net.getUnconnectedOutLayers()]
 
 # Draw the predicted bounding box
-def drawPred(classId, conf, left, top, right, bottom):
+def drawPred(frameX, classId, conf, left, top, right, bottom):
     # Draw a bounding box.
-    cv.rectangle(frame, (left, top), (right, bottom), (255, 178, 50), 3)
+    cv.rectangle(frameX, (left, top), (right, bottom), (255, 178, 50), 3)
     
     label = '%.2f' % conf
         
@@ -52,8 +53,8 @@ def drawPred(classId, conf, left, top, right, bottom):
     #Display the label at the top of the bounding box
     labelSize, baseLine = cv.getTextSize(label, cv.FONT_HERSHEY_SIMPLEX, 0.5, 1)
     top = max(top, labelSize[1])
-    cv.rectangle(frame, (left, top - round(1.5*labelSize[1])), (left + round(1.5*labelSize[0]), top + baseLine), (255, 255, 255), cv.FILLED)
-    cv.putText(frame, label, (left, top), cv.FONT_HERSHEY_SIMPLEX, 0.75, (0,0,0), 1)
+    cv.rectangle(frameX, (left, top - round(1.5*labelSize[1])), (left + round(1.5*labelSize[0]), top + baseLine), (255, 255, 255), cv.FILLED)
+    cv.putText(frameX, label, (left, top), cv.FONT_HERSHEY_SIMPLEX, 0.75, (0,0,0), 1)
 
 # Remove the bounding boxes with low confidence using non-maxima suppression
 def postprocess(frame, outs):
@@ -94,7 +95,7 @@ def postprocess(frame, outs):
         top = box[1]
         width = box[2]
         height = box[3]
-        drawPred(classIds[i], confidences[i], left, top, left + width, top + height)
+        drawPred(frame, classIds[i], confidences[i], left, top, left + width, top + height)
 
 # Process inputs
 winName = 'Deep learning object detection in OpenCV'
