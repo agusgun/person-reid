@@ -19,24 +19,19 @@ class InputThread(QThread):
     def __init__(self, video=False):
         super().__init__()
         self.is_running = True
-        self.video = video
         self.ret = None
         self.cap = None
 
     def run(self):
-        if self.video:
-            self.cap = cv.VideoCapture(self.file_name)
-        else:
-            self.cap = cv.VideoCapture(0)
         while True and self.is_running:
             self.ret, self.frame = self.cap.read()
             if self.ret:
                 rgbImage = cv.cvtColor(self.frame, cv.COLOR_BGR2RGB)
                 convertToQtFormat = QImage(rgbImage.data, rgbImage.shape[1], rgbImage.shape[0], QImage.Format_RGB888)
-                p = convertToQtFormat.scaled(640, 480, Qt.KeepAspectRatio)
+                p = convertToQtFormat.scaled(800, 600, Qt.KeepAspectRatio)
                 self.changePixmap.emit(p)
                 self.msleep(40)
-
+        print('Cap Rel')
         self.cap.release()
 
     def set_file_name(self, file_name):
@@ -48,8 +43,11 @@ class InputThread(QThread):
         else:
             return None, None
 
-    def set_video(self, video):
-        self.video = video
+    def change_input2video(self):
+        self.cap = cv.VideoCapture(self.file_name)
+
+    def change_input2camera(self):
+        self.cap = cv.VideoCapture(0)
 
     def signal_start(self):
         self.is_running = True
@@ -62,7 +60,7 @@ class InputWidget(QWidget):
         super(InputWidget, self).__init__(parent)
 
         self.label = QLabel()
-        self.label.resize(640, 480)
+        self.label.resize(800, 600)
 
         self.th_input = InputThread()
         self.th_input.changePixmap.connect(self.setImage)
@@ -77,7 +75,7 @@ class InputWidget(QWidget):
 
     def start_camera(self):
         self.th_input.signal_stop()
-        self.th_input.set_video(False)
+        self.th_input.change_input2camera()
         self.th_input.signal_start()
         self.th_input.start()
 
@@ -87,7 +85,7 @@ class InputWidget(QWidget):
             QDir.homePath())
         if file_name != '':
             self.th_input.set_file_name(file_name)
-            self.th_input.set_video(True)
+            self.th_input.change_input2video()
             self.th_input.signal_start()
             self.th_input.start()
 
@@ -215,7 +213,7 @@ class DetectionTrackingThread(QThread):
                 # Convert frame to display to PyQt
                 rgbImage = cv.cvtColor(frame, cv.COLOR_BGR2RGB)
                 convertToQtFormat = QImage(rgbImage.data, rgbImage.shape[1], rgbImage.shape[0], QImage.Format_RGB888)
-                p = convertToQtFormat.scaled(640, 480, Qt.KeepAspectRatio)
+                p = convertToQtFormat.scaled(800, 600, Qt.KeepAspectRatio)
                 self.changePixmap.emit(p)
                 # self.msleep(1000)
 
@@ -232,7 +230,7 @@ class DetectionTrackingTab(QWidget):
         self.input_thread = input_thread
 
         self.label = QLabel()
-        self.label.resize(640, 480)
+        self.label.resize(800, 600)
 
         self.layout = QVBoxLayout()
         self.layout.addWidget(self.label)
@@ -309,6 +307,7 @@ class MainWindow(QMainWindow):
 
     def open_file(self):
         self.tabs.input_tab.input_widget.start_video()
+        self.tabs.detection_tracking_tab.th_detection_tracking.signal_start()
 
     def exit_call(self):
         sys.exit(app.exec_())
