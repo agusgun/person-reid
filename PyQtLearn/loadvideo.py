@@ -13,6 +13,13 @@ import os
 import cv2 as cv
 import numpy as np
 
+# Deep Sort Stuff
+from deep_sort import preprocessing
+from deep_sort import nn_matching
+from deep_sort.tracker import Tracker
+from deep_sort.tools import generate_detections as gdet
+from deep_sort.detection import Detection as ddet
+
 class InputThread(QThread):
     changePixmap = pyqtSignal(QImage)
 
@@ -30,7 +37,7 @@ class InputThread(QThread):
                 convertToQtFormat = QImage(rgbImage.data, rgbImage.shape[1], rgbImage.shape[0], QImage.Format_RGB888)
                 p = convertToQtFormat.scaled(800, 600, Qt.KeepAspectRatio)
                 self.changePixmap.emit(p)
-                self.msleep(40)
+                self.msleep(60)
         print('Cap Rel')
         self.cap.release()
 
@@ -173,6 +180,7 @@ class Detection:
 
         # Perform non maximum suppression to eliminate redundant overlapping boxes with
         # lower confidences.
+        boxes_for_tracking = []
         indices = cv.dnn.NMSBoxes(boxes, confidences, self.confThreshold, self.nmsThreshold)
         for i in indices:
             i = i[0]
@@ -181,7 +189,29 @@ class Detection:
             top = box[1]
             width = box[2]
             height = box[3]
-            self.drawPred(frame, classIds[i], confidences[i], left, top, left + width, top + height)
+
+            if left < 0:
+                width += left
+                left = 0
+            if top < 0:
+                height += top
+                top = 0
+
+            # self.drawPred(frame, classIds[i], confidences[i], left, top, left + width, top + height)
+            # Return boxes for deep sort functionality 
+            boxes_for_tracking.append([left, top, width, height])
+
+        return boxes_for_tracking
+
+class Tracking:
+    def __init__(self):
+        max_cosine_distance = 0.3
+        nn_budget = None
+
+        model_filename = 'model_data/mars-small128.pb'
+        self.encoder = gdet.create_box_encoder(model_filename)
+        metric = nn_matching.NearestNeighborDistanceMetric("cosine", max_cosine_distance, nn_budget)
+        self.tracker = Tracker(metric)
 
 
 class DetectionTrackingThread(QThread):
@@ -192,6 +222,7 @@ class DetectionTrackingThread(QThread):
         self.is_running = True
         self.input_thread = input_thread
         self.detection = Detection()
+        self.tracking = Tracking()
 
     def run(self):
         while True and self.is_running:
@@ -205,7 +236,25 @@ class DetectionTrackingThread(QThread):
                 # Runs the forward pass to get output of the output layers
                 outs = self.detection.net.forward(self.detection.getOutputsNames(self.detection.net))
                 # Remove the bounding boxes with low confidence
-                self.detection.postprocess(frame, outs)
+                boxes_for_tracking = self.detection.postprocess(frame, outs)
+                features = self.tracking.encoder(frame, boxes_for_tracking)
+                detections = [ddet(bbox, 1.0, feature) for bbox, feature in zip(boxes_for_tracking, features)]
+
+                self.tracking.tracker.predict()
+                self.tracking.tracker.update(detections)
+
+                for track in self.tracking.tracker.tracks:
+                    if not track.is_confirmed() or track.time_since_update > 1:
+                        continue
+                    bbox = track.to_tlbr()
+                    cv.rectangle(frame, (int(bbox[0]), int(bbox[1])), (int(bbox[2]), int(bbox[3])),(255,255,255), 2)
+                    cv.putText(frame, str(track.track_id),(int(bbox[0]), int(bbox[1])),0, 5e-3 * 200, (0,255,0),2)
+
+                for det in detections:
+                    bbox = det.to_tlbr()
+                    cv.rectangle(frame,(int(bbox[0]), int(bbox[1])), (int(bbox[2]), int(bbox[3])),(255,0,0), 2)
+
+
                 # Put efficiency information. The function getPerfProfile returns the overall time for inference(t) and the timings for each of the layers(in layersTimes)
                 t, _ = self.detection.net.getPerfProfile()
                 label = 'Inference time: %.2f ms' % (t * 1000.0 / cv.getTickFrequency())
