@@ -92,7 +92,7 @@ __pycache__/
 
 # Distribution / packaging
 .Python
-build/
+!build/settings/
 develop-eggs/
 dist/
 downloads/
