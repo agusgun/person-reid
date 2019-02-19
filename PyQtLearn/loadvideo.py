@@ -159,7 +159,8 @@ class Detection:
                 scores = detection[5:]
                 classId = np.argmax(scores)
                 confidence = scores[classId]
-                if confidence > self.confThreshold:
+                # Class Id == 0 for person
+                if confidence > self.confThreshold and classId == 0:
                     center_x = int(detection[0] * frameWidth)
                     center_y = int(detection[1] * frameHeight)
                     width = int(detection[2] * frameWidth)
