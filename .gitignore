@@ -225,4 +225,5 @@ yolov3.weights
 yolov3-tiny.weights
 yolo_out_py.avi
 coco.names
+coco.data
 Basdat_03.mp4
