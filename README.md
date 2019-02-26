@@ -17,5 +17,35 @@ Create symlink using this command:
 3. Export GPU option: `EXPORT GPU=1`
 4. Export OpenCV option: `EXPORT OPENCV=1` [For this, install OpenCV first using the link given by README of the file]
 
+## Detection
+[YOLOv3]
+
 ## Tracking
 [Deep Sort](https://github.com/nwojke/deep_sort)
+[Optical Flow](TODO)
+
+## Keyframe Extraction
+### Face
+#### Detection
+[x] [Haar Cascade Classifier]()
+[ ] [HOG using dlib]()
+[ ] [MTCNN](TODO)
+
+#### Facial Landmark Extraction
+[x] [Dlib Kazemi Sullivan]()
+[ ] [MTCNN](TODO)
+
+#### Keyframe Extraction
+1. Using thresholding on facial landmark size
+2. Using confidence from MTCNN
+
+### Apperance Model
+
+
+# Thesis Progress
+
+[x] Threading Input
+[x] Detection
+[x] Tracking
+[x] Threading Detection & Tracking
+[ ] Keyframe Extraction
