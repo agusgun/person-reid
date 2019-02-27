@@ -33,7 +33,7 @@ class Detection:
         top = max(top, labelSize[1])
         cv.rectangle(frame, (left, top - round(1.5*labelSize[1])), (left + round(1.5*labelSize[0]), top + baseLine), (255, 255, 255), cv.FILLED)
         cv.putText(frame, label, (left, top), cv.FONT_HERSHEY_SIMPLEX, 0.75, (0,0,0), 1)
-        print(top, left, bottom, right)
+        # print(top, left, bottom, right)
 
     # Convert bounding box format for tracking purpose
     def postprocess(self, frame, outs):
@@ -60,8 +60,8 @@ class Detection:
                 height += top
                 top = 0
 
-            self.drawPred(frame, class_name, score, left, top, left + width, top + height)
+            # self.drawPred(frame, class_name, score, left, top, left + width, top + height)
             boxes_for_tracking.append([left, top, width, height])
-            print('wei', width, height)
+            # print('wei', width, height)
 
         return boxes_for_tracking

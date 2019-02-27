@@ -58,35 +58,36 @@ class DetectionTrackingThread(QThread):
                 features = self.tracking.encoder(frame, boxes_for_tracking)
                 detections = [ddet(bbox, 1.0, feature) for bbox, feature in zip(boxes_for_tracking, features)]
 
-                # self.tracking.tracker.predict()
-                # self.tracking.tracker.update(detections)
+                self.tracking.tracker.predict()
+                self.tracking.tracker.update(detections)
 
-                # for track in self.tracking.tracker.tracks:
-                #     if not track.is_confirmed() or track.time_since_update > 1:
-                #         continue
+                for track in self.tracking.tracker.tracks:
+                    if not track.is_confirmed() or track.time_since_update > 1:
+                        continue
                     
-                #     for idx_det, det in enumerate(detections):
-                #         bbox_detection = det.to_tlbr()
-                #         bbox_tracking = track.to_tlbr()
+                    for idx_det, det in enumerate(detections):
+                        bbox_detection = det.to_tlbr()
+                        bbox_tracking = track.to_tlbr()
 
-                #         if bb_intersection_over_union(bbox_detection, bbox_tracking) > 0.5:
-                #             del detections[idx_det]
-                            
-                #             # if track.track_id in self.person_iterator_dict:
-                #             #     self.person_iterator_dict[track.track_id] += 1
-                #             # else:
-                #             #     self.person_iterator_dict[track.track_id] = 0
-                            
-                #             # crop_img = frame[int(bbox_tracking[1]): int(bbox_tracking[3]), int(bbox_tracking[0]): int(bbox_tracking[2])]
-                #             # dir_name = os.path.abspath(os.path.dirname(__file__))
-                #             # frame_output_filename = '../frame_output/' + str(track.track_id) + '_' + str(self.person_iterator_dict[track.track_id]) + '.png'
-                #             # cv.imwrite(os.path.join(dir_name, frame_output_filename), crop_img)
+                        if bb_intersection_over_union(bbox_detection, bbox_tracking) > 0.5:
+                            del detections[idx_det]
+                            # Check if the left of tracking position is still in the frame (if not will crop empty image) TODO: better handler
+                            if (bbox_tracking[0] >= 0 and bbox_tracking[1] >= 0):
+                                if track.track_id in self.person_iterator_dict:
+                                    self.person_iterator_dict[track.track_id] += 1
+                                else:
+                                    self.person_iterator_dict[track.track_id] = 0
 
-                #             cv.rectangle(frame, (int(bbox_detection[0]), int(bbox_detection[1])), (int(bbox_detection[2]), int(bbox_detection[3])), (255,255,255), 2)
-                #             cv.putText(frame, str(track.track_id),(int(bbox_detection[0]), int(bbox_detection[1])), 0, 5e-3 * 200, (0,255,0), 2)
+                                cropped_img = frame[int(bbox_tracking[1]): int(bbox_tracking[3]), int(bbox_tracking[0]): int(bbox_tracking[2])]
+                                dir_name = os.path.abspath(os.path.dirname(__file__))
+                                frame_output_filename = '../frame_output/' + str(track.track_id) + '_' + str(self.person_iterator_dict[track.track_id]) + '.png'
+                                cv.imwrite(os.path.join(dir_name, frame_output_filename), cropped_img)
+
+                            cv.rectangle(frame, (int(bbox_detection[0]), int(bbox_detection[1])), (int(bbox_detection[2]), int(bbox_detection[3])), (255,255,255), 2)
+                            cv.putText(frame, str(track.track_id),(int(bbox_detection[0]), int(bbox_detection[1])), 0, 5e-3 * 200, (0,255,0), 2)
 
                 end_time = time.time()
-                # Put efficiency information. The function getPerfProfile returns the overall time for inference(t) and the timings for each of the layers(in layersTimes)
+                # Put efficiency information
                 label = 'Inference time: %.2f ms' % ((end_time - start_time)*1000)
                 cv.putText(frame, label, (0, 15), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255))
                 # Convert frame to display to PyQt
