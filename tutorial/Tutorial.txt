@@ -32,5 +32,13 @@ sudo rm /usr/local/lib/python3.6/dist-packages/PyQt5/Qt/plugins/mediaservice/lib
 sudo ln -s /usr/lib/x86_64-linux-gnu/qt5/plugins/mediaservice/libgstmediaplayer.so /usr/local/lib/python3.6/dist-packages/PyQt5/Qt/plugins/mediaservice/libgstmediaplayer.so
 
 
+# CUDA-GPU
+Using yolo34py-gpu
+
 # Next
+
+## Conda Dependency
+install libblitz using conda
+install bob=4.0.0 using conda (--no-deps)
+install bob.bio.face
 
