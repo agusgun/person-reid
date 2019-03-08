@@ -1,5 +1,6 @@
 from .tabs.detection_tracking_tab import DetectionTrackingTab
 from .tabs.input_tab import InputTab
+from .tabs.reidentification_tab import ReidentificationTab
 from PyQt5.QtWidgets import QTabWidget, QVBoxLayout, QWidget
 
 class TabWidget(QWidget):
@@ -9,7 +10,7 @@ class TabWidget(QWidget):
         self.tabs = QTabWidget()
         self.input_tab = InputTab()
         self.detection_tracking_tab = DetectionTrackingTab(self.input_tab.input_widget.th_input)
-        self.reid_tab = QWidget()
+        self.reid_tab = ReidentificationTab()
         self.tabs.addTab(self.input_tab, "Input")
         self.tabs.addTab(self.detection_tracking_tab, "Detection and Tracking")
         self.tabs.addTab(self.reid_tab, "Re-identification")
