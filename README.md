@@ -18,25 +18,30 @@ Create symlink using this command:
 4. Export OpenCV option: `EXPORT OPENCV=1` [For this, install OpenCV first using the link given by README of the file]
 
 ## Detection
-[YOLOv3]
+- [YOLOv3]
 
 ## Tracking
-[Deep Sort](https://github.com/nwojke/deep_sort)
-[Optical Flow](TODO)
+- [Deep Sort](https://github.com/nwojke/deep_sort)
+- [Optical Flow](TODO)
 
 ## Keyframe Extraction
 ### Face
 #### Detection
-[x] [Haar Cascade Classifier]()
-[ ] [HOG using dlib]()
-[ ] [MTCNN](TODO)
+- [x] [Haar Cascade Classifier]()
+- [ ] [HOG using dlib]()
+- [ ] [MTCNN](TODO)
 
 #### Facial Landmark Extraction
-[x] [Dlib Kazemi Sullivan]()
-[ ] [MTCNN](TODO)
+- [x] [Dlib Kazemi Sullivan]()
+- [ ] [MTCNN](TODO)
 
 #### Keyframe Extraction
-1. Using thresholding on facial landmark size
+1. Using thresholding on facial landmark size (Face image need to be resized first for measure the threshold)
+- Using heuristic to determine the threshold
+- [TODO] Need to determine the necessary training sample for the keyfram extraction (Assumption: 5-10 keyframe per person)
+- Assumption: Person Detection Accurate
+- Assumption: Face Detection Accurate
+
 2. Using confidence from MTCNN
 
 ### Apperance Model
@@ -44,8 +49,15 @@ Create symlink using this command:
 
 # Thesis Progress
 
-[x] Threading Input
-[x] Detection
-[x] Tracking
-[x] Threading Detection & Tracking
-[ ] Keyframe Extraction
+- [x] Threading Input
+- [x] Detection
+- [x] Tracking
+- [x] Detection & Tracking Threading
+- [ ] Keyframe Extraction
+- [ ] Re-identification Threading
+- [ ] Face Recognition (Re-identification Face)
+- [ ] Appearance Model Re-identification
+
+# Other Important Stuff
+- Frame output resulting in about 11.444 person image until the end of the video.
+- 
