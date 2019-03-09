@@ -7,10 +7,11 @@ from scipy.spatial import distance
 
 class FaceKeyframe: 
     def __init__(self):
-        model_dir_path = os.path.join(os.path.dirname(__file__) + '../model_data/')
+        curr_dir_path = os.path.dirname(__file__)
+        model_dir_path = os.path.join(curr_dir_path, '../model_data/')
         cascade_classifier_path = os.path.join(model_dir_path + 'haarcascade_frontalface_alt.xml')
         facial_landmark_extractor_path = os.path.join(model_dir_path + 'shape_predictor_68_face_landmarks.dat')
-
+        
         self.cascade_classifier = cv.CascadeClassifier(cascade_classifier_path)
         self.facial_landmark_extractor = dlib.shape_predictor(facial_landmark_extractor_path)
 
@@ -84,12 +85,20 @@ class FaceKeyframe:
             else:
                 return None
 
-    def generate_keyframes_from_frames(self, person_id, input_path_list, output_dir_path):
+    def generate_keyframes_from_frames(self, person_id, input_dir_path, output_dir_path):
+        input_path_list = os.listdir(input_dir_path)
+        input_path_list = [os.path.join(input_dir_path, file_path) for file_path in input_path_list]
+        condition = '/' + str(person_id) + '_'
+        input_path_list = [file_path for file_path in input_path_list if condition in file_path]
+        print(input_path_list)
+
         counter = 0
+        print(output_dir_path)
         for file_path in input_path_list:
             face_img = self.face_keyframe_check(file_path)
-            if face_img != None:
-                keyframe_output_path = 'K' + str(id) + '_' + counter + '.png'
+            if not face_img is None:
+                keyframe_output_path = 'K' + str(person_id) + '_' + str(counter) + '.png'
                 keyframe_output_path = os.path.join(output_dir_path, keyframe_output_path)
                 cv.imwrite(keyframe_output_path, face_img)
                 counter += 1
+                print(counter)
