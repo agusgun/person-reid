@@ -1,6 +1,7 @@
 from app.deep_sort.detection import Detection as ddet
 from app.detection_tracking.detection import Detection
 from app.detection_tracking.tracking import Tracking
+from app.keyframe.face_keyframe import FaceKeyframe
 import cv2 as cv
 import os
 from pydarknet import Image
@@ -41,7 +42,11 @@ class DetectionTrackingThread(QThread):
         self.detection = Detection()
         self.tracking = Tracking()
         self.person_iterator_dict = dict()
-
+        curr_dir_path = os.path.dirname(__file__)
+        self.person_frame_dir_path = os.path.join(curr_dir_path, '../frame_output/')
+        self.face_keyframe = FaceKeyframe()
+        self.face_keyframe_output_dir_path = os.path.join(curr_dir_path, '../keyframe_output/')
+        
     def run(self):
         while True and self.is_running:
             ret, frame = self.input_thread.get_capture()
@@ -62,6 +67,10 @@ class DetectionTrackingThread(QThread):
                 self.tracking.tracker.update(detections)
 
                 for track in self.tracking.tracker.tracks:
+                    # Trigger for keyframe extraction
+                    if track.time_since_update == self.tracking.max_age:
+                        self.face_keyframe.generate_keyframes_from_frames(track.track_id, self.person_frame_dir_path, self.face_keyframe_output_dir_path)
+                        
                     if not track.is_confirmed() or track.time_since_update > 1:
                         continue
                     
@@ -81,7 +90,7 @@ class DetectionTrackingThread(QThread):
                                 cropped_img = frame[int(bbox_tracking[1]): int(bbox_tracking[3]), int(bbox_tracking[0]): int(bbox_tracking[2])]
                                 dir_name = os.path.abspath(os.path.dirname(__file__))
                                 frame_output_filename = '../frame_output/' + str(track.track_id) + '_' + str(self.person_iterator_dict[track.track_id]) + '.png'
-                                cv.imwrite(os.path.join(dir_name, frame_output_filename), cropped_img)
+                                # cv.imwrite(os.path.join(dir_name, frame_output_filename), cropped_img)
 
                             cv.rectangle(frame, (int(bbox_detection[0]), int(bbox_detection[1])), (int(bbox_detection[2]), int(bbox_detection[3])), (255,255,255), 2)
                             cv.putText(frame, str(track.track_id),(int(bbox_detection[0]), int(bbox_detection[1])), 0, 5e-3 * 200, (0,255,0), 2)
