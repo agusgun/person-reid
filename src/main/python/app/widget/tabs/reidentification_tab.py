@@ -15,3 +15,6 @@ class ReidentificationTab(QWidget):
         
         self.th_reidentification = ReidentificationThread()
         self.th_reidentification.start()
+
+        self.th_reidentification.update_display_trigger.connect(reidentification_widget.add_new_person)
+        self.th_reidentification.update_time_trigger.connect(reidentification_widget.update_datetime_person)

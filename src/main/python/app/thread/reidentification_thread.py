@@ -2,10 +2,13 @@ from app.keyframe.face_keyframe import FaceKeyframe
 from app.reidentification.face_reidentification import FaceReidentification
 import numpy as np
 import os
-from PyQt5.QtCore import QThread, pyqtSlot
+from PyQt5.QtCore import QThread, pyqtSlot, pyqtSignal
 import queue
 
 class ReidentificationThread(QThread):
+    update_display_trigger = pyqtSignal(int, int)
+    update_time_trigger = pyqtSignal(int, int)
+
     def __init__(self):
         super().__init__()
         self.is_triggered = False
@@ -31,6 +34,8 @@ class ReidentificationThread(QThread):
                 if self.face_reidentification.is_not_trained():
                     print('First Train', keyframe_id)
                     self.face_reidentification.init_train_model(classifier='svm')
+                    self.update_display_trigger.emit(self.face_reidentification.keyframe_person_dict[keyframe_id], keyframe_id)
+                    # self.update_time_trigger.emit(self.face_reidentification.keyframe_person_dict[keyframe_id], keyframe_id)
                 else:
                     print('Predict', keyframe_id)
                     predicted_proba = self.face_reidentification.predict_batch(keyframe_id, classifier='svm', return_proba=True)
@@ -51,6 +56,7 @@ class ReidentificationThread(QThread):
                         if confidence_arr[0] > 0.7 or is_confidence_below_threshold: # new person
                             print('New Person Update', keyframe_id)
                             self.face_reidentification.update_model(keyframe_id, classifier='svm')
+                            self.update_display_trigger.emit(self.face_reidentification.keyframe_person_dict[keyframe_id], keyframe_id)
                         else: # existing person
                             predicted = np.argmax(confidence_arr)
                             print('Existing Person', keyframe_id, predicted)
