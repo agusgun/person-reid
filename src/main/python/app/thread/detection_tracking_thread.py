@@ -1,7 +1,6 @@
 from app.deep_sort.detection import Detection as ddet
 from app.detection_tracking.detection import Detection
 from app.detection_tracking.tracking import Tracking
-from app.keyframe.face_keyframe import FaceKeyframe
 import cv2 as cv
 import os
 from pydarknet import Image
@@ -34,6 +33,8 @@ def bb_intersection_over_union(boxA, boxB):
 
 class DetectionTrackingThread(QThread):
     changePixmap = pyqtSignal(QImage)
+    change_person_id = pyqtSignal(int)
+    init_trigger = pyqtSignal(bool) 
 
     def __init__(self, input_thread):
         super().__init__()
@@ -42,10 +43,6 @@ class DetectionTrackingThread(QThread):
         self.detection = Detection()
         self.tracking = Tracking()
         self.person_iterator_dict = dict()
-        curr_dir_path = os.path.dirname(__file__)
-        self.person_frame_dir_path = os.path.join(curr_dir_path, '../frame_output/')
-        self.face_keyframe = FaceKeyframe()
-        self.face_keyframe_output_dir_path = os.path.join(curr_dir_path, '../keyframe_output/')
         
     def run(self):
         while True and self.is_running:
@@ -69,7 +66,8 @@ class DetectionTrackingThread(QThread):
                 for track in self.tracking.tracker.tracks:
                     # Trigger for keyframe extraction
                     if track.time_since_update == self.tracking.max_age:
-                        self.face_keyframe.generate_keyframes_from_frames(track.track_id, self.person_frame_dir_path, self.face_keyframe_output_dir_path)
+                        self.change_person_id.emit(track.track_id)
+                        self.init_trigger.emit(True)
                         
                     if not track.is_confirmed() or track.time_since_update > 1:
                         continue
