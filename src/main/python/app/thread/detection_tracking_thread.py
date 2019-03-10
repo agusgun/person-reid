@@ -34,8 +34,7 @@ def bb_intersection_over_union(boxA, boxB):
 class DetectionTrackingThread(QThread):
     changePixmap = pyqtSignal(QImage)
     change_person_id = pyqtSignal(int)
-    init_trigger = pyqtSignal(bool) 
-
+    
     def __init__(self, input_thread):
         super().__init__()
         self.is_running = True
@@ -67,7 +66,6 @@ class DetectionTrackingThread(QThread):
                     # Trigger for keyframe extraction
                     if track.time_since_update == self.tracking.max_age:
                         self.change_person_id.emit(track.track_id)
-                        self.init_trigger.emit(True)
                         
                     if not track.is_confirmed() or track.time_since_update > 1:
                         continue

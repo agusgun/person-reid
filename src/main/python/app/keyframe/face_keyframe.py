@@ -90,10 +90,9 @@ class FaceKeyframe:
         input_path_list = [os.path.join(input_dir_path, file_path) for file_path in input_path_list]
         condition = '/' + str(person_id) + '_'
         input_path_list = [file_path for file_path in input_path_list if condition in file_path]
-        print(input_path_list)
 
         counter = 0
-        print(output_dir_path)
+        print("generate keyframe from keyframe_id = ", person_id)
         for file_path in input_path_list:
             face_img = self.face_keyframe_check(file_path)
             if not face_img is None:
@@ -101,4 +100,6 @@ class FaceKeyframe:
                 keyframe_output_path = os.path.join(output_dir_path, keyframe_output_path)
                 cv.imwrite(keyframe_output_path, face_img)
                 counter += 1
-                print(counter)
+            
+            if counter == 10:
+                break
