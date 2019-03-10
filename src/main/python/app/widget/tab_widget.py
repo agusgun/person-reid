@@ -20,3 +20,7 @@ class TabWidget(QWidget):
         layout.addWidget(self.tabs)
         self.setLayout(layout)
 
+        self.detection_tracking_tab.th_detection_tracking.init_trigger.connect(
+            self.reid_tab.th_reidentification.init_trigger)
+        self.detection_tracking_tab.th_detection_tracking.change_person_id.connect(
+            self.reid_tab.th_reidentification.set_person_id)
