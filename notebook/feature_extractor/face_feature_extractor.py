@@ -25,3 +25,6 @@ class FaceFeatureExtractor:
         for img_path in img_path_list:
             features.append(self.extract(img_path))
         return features
+
+    def extract_image(self, image):
+        return self.extractor.extract_image(image)

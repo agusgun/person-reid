@@ -81,3 +81,13 @@ class VGGFaceEmbedding:
     
     def extract(self, img_path):
         return self.descriptor.predict(self.preprocess_image(img_path))[0]
+
+    def extract_image(self, img):
+        img = cv.resize(img, (224, 224), interpolation=cv.INTER_AREA)
+        img = np.expand_dims(img, axis=0)
+        if self.preprocess_version:
+            img = utils.preprocess_input(img, version=self.preprocess_version)
+        else:
+            img = preprocess_input(img)
+            
+        return self.descriptor.predict(img)[0]

@@ -26,6 +26,16 @@ class FacenetEmbedding:
         features = self.sess.run(self.embeddings_placeholder, feed_dict=feed_dict)
         return features[0]
     
+    def extract_image(self, img):
+        resized_img = cv.resize(img, self.img_size, interpolation=cv.INTER_AREA)
+        prewithened = facenet.prewhiten(resized_img)
+
+        # Get Embedding Here
+        reshaped_img = prewithened.reshape(-1, self.img_size[0], self.img_size[1], 3)
+        feed_dict = {self.images_placeholder:reshaped_img, self.phase_train_placeholder:False}
+        features = self.sess.run(self.embeddings_placeholder, feed_dict=feed_dict)
+        return features[0]
+
     def _image_to_embedding_batch(self, img_path_list):
         images = []
         for img_path in img_path_list:

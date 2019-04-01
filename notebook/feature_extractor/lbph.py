@@ -10,3 +10,9 @@ class LBPHFeatureExtractor:
         gray_img = cv.imread(img_path, cv.IMREAD_GRAYSCALE)
         gray_img = cv.resize(gray_img, self.img_size, interpolation=cv.INTER_AREA)
         return self.extractor.extract(gray_img)
+
+    def extract_image(self, img):
+        gray_img = cv.cvtColor(img, cv.COLOR_RGB2GRAY)
+        gray_img = cv.resize(gray_img, self.img_size, interpolation=cv.INTER_AREA)
+        return self.extractor.extract(gray_img)
+        
