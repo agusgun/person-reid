@@ -6,6 +6,7 @@ from keras.applications.imagenet_utils import preprocess_input
 import numpy as np
 from keras_vggface.vggface import VGGFace
 from keras_vggface import utils
+import cv2 as cv
 
 class VGGFaceEmbedding:
     def __init__(self, pretrained_model_path, model_name='original'):
@@ -83,7 +84,7 @@ class VGGFaceEmbedding:
         return self.descriptor.predict(self.preprocess_image(img_path))[0]
 
     def extract_image(self, img):
-        img = cv.resize(img, (224, 224), interpolation=cv.INTER_AREA)
+        img = cv.resize(img, (224, 224), interpolation=cv.INTER_AREA).astype(np.float32)
         img = np.expand_dims(img, axis=0)
         if self.preprocess_version:
             img = utils.preprocess_input(img, version=self.preprocess_version)
