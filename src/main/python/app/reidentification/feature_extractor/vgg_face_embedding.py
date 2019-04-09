@@ -7,10 +7,13 @@ import numpy as np
 from keras_vggface.vggface import VGGFace
 from keras_vggface import utils
 import cv2 as cv
+from keras import backend as K
+import tensorflow as tf
 
 class VGGFaceEmbedding:
     def __init__(self, pretrained_model_path, model_name='original'):
         if model_name == 'original':
+            self.graph = tf.get_default_graph()
             model = Sequential()
             model.add(ZeroPadding2D((1,1),input_shape=(224,224, 3)))
             model.add(Convolution2D(64, (3, 3), activation='relu'))
@@ -61,9 +64,11 @@ class VGGFaceEmbedding:
             self.descriptor = Model(inputs=model.layers[0].input, outputs=model.layers[-2].output)
             self.preprocess_version = None
         elif model_name == 'vgg16':
+            self.graph = tf.get_default_graph()
             self.descriptor = VGGFace(model='vgg16', include_top=False, input_shape=(224, 224, 3), pooling='avg')
             self.preprocess_version = 1
         elif model_name == 'resnet50':
+            self.graph = tf.get_default_graph()
             self.descriptor = VGGFace(model='resnet50', include_top=False, input_shape=(224, 224, 3), pooling='avg')
             self.preprocess_version = 2
         else:
@@ -81,7 +86,8 @@ class VGGFaceEmbedding:
         return img
     
     def extract(self, img_path):
-        return self.descriptor.predict(self.preprocess_image(img_path))[0]
+        with self.graph.as_default():
+            return self.descriptor.predict(self.preprocess_image(img_path))[0]
 
     def extract_image(self, img):
         img = cv.resize(img, (224, 224), interpolation=cv.INTER_AREA).astype(np.float32)
