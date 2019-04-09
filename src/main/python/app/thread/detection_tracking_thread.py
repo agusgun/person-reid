@@ -84,9 +84,14 @@ class DetectionTrackingThread(QThread):
                                     self.person_iterator_dict[track.track_id] = 0
 
                                 cropped_img = frame[int(bbox_tracking[1]): int(bbox_tracking[3]), int(bbox_tracking[0]): int(bbox_tracking[2])]
-                                dir_name = os.path.abspath(os.path.dirname(__file__))
-                                frame_output_filename = '../frame_output/' + str(track.track_id) + '_' + str(self.person_iterator_dict[track.track_id]) + '.png'
-                                # cv.imwrite(os.path.join(dir_name, frame_output_filename), cropped_img)
+                                curr_dir_path = os.path.abspath(os.path.dirname(__file__))
+                                output_dir_path = os.path.join(curr_dir_path, '../frame_output/')
+                                person_id_dir_path = os.path.join(output_dir_path, str(track.track_id))
+                                if not os.path.exists(person_id_dir_path):
+                                    os.makedirs(person_id_dir_path)
+                                frame_output_file_path = os.path.join(person_id_dir_path, str(self.person_iterator_dict[track.track_id]) + '.png')        
+                                
+                                cv.imwrite(os.path.join(frame_output_file_path), cropped_img)
 
                             cv.rectangle(frame, (int(bbox_detection[0]), int(bbox_detection[1])), (int(bbox_detection[2]), int(bbox_detection[3])), (255,255,255), 2)
                             cv.putText(frame, str(track.track_id),(int(bbox_detection[0]), int(bbox_detection[1])), 0, 5e-3 * 200, (0,255,0), 2)
