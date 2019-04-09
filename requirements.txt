@@ -12,6 +12,7 @@ dask==1.1.3
 decorator==4.3.2
 dlib==19.16.0
 docutils==0.14
+facerec==1.0
 fbs==0.6.7
 gast==0.2.2
 grpcio==1.18.0
@@ -27,9 +28,11 @@ lazy-object-proxy==1.3.1
 Markdown==3.0.1
 matplotlib==3.0.3
 mccabe==0.6.1
+mock==2.0.0
 networkx==2.2
 numpy==1.16.1
 opencv-python==4.0.0.21
+pbr==5.1.3
 Pillow==5.4.1
 pkg-resources==0.0.0
 protobuf==3.6.1
@@ -46,10 +49,12 @@ scikit-learn==0.20.2
 scipy==1.2.1
 six==1.12.0
 sklearn==0.0
-tensorboard==1.12.2
-tensorflow==1.12.0
+tensorboard==1.13.1
+tensorflow==1.13.1
+tensorflow-estimator==1.13.0
 termcolor==1.1.0
 toolz==0.9.0
+tqdm==4.31.1
 typed-ast==1.3.1
 urllib3==1.24.1
 Werkzeug==0.14.1
