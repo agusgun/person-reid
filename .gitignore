@@ -228,3 +228,12 @@ coco.names
 coco.data
 Basdat_03.mp4
 frame_output/
+
+## Model Stuff
+model_data/
+
+## Dataset
+lfw/
+BioID-FaceDatabase-V1.2/
+face_data/
+person_data/
