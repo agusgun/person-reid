@@ -1,5 +1,5 @@
 import tensorflow as tf
-from facenet import facenet
+from .facenet import facenet
 import cv2 as cv
 
 
