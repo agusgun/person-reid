@@ -14,12 +14,15 @@ class FaceDetector:
         self.detector_type = detector
 
         if detector == 'mtcnn':
+            print('Load MTCNN Face Detector')
             self.detector = MTCNN()
             self.landmark_extractor = None
         elif detector == 'dlib_hog':
+            print('Load HOG Face Detector')
             self.detector = dlib.get_frontal_face_detector()
             self.landmark_extractor = dlib.shape_predictor(FACIAL_LANDMARK_EXTRACTOR_PATH)
         elif detector == 'cascade':
+            print('Load Cascade Face Detector')
             self.detector = cv.CascadeClassifier(CASCADE_CLASSIFIER_MODEL_PATH)
             self.landmark_extractor = dlib.shape_predictor(FACIAL_LANDMARK_EXTRACTOR_PATH)
         else:
