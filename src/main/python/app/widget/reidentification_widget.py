@@ -21,14 +21,12 @@ class ReidentificationWidget(QScrollArea):
         person_layout = QVBoxLayout()
         person_layout.addWidget(QLabel('Person %02d' % person_id))
         
-        base_img_path_list = os.listdir(self.input_dir_path)
-        face_keyframe_path_list = []
-        for img_path in base_img_path_list:
-            if 'K' + str(keyframe_id) + '_' in img_path:
-                face_keyframe_path_list.append(os.path.join(self.input_dir_path, img_path))
+        face_keyframe_dir_path = os.path.join(self.input_dir_path, str(keyframe_id))
+        face_keyframe_paths = os.listdir(face_keyframe_dir_path)
+        face_keyframe_paths = [os.path.join(face_keyframe_dir_path, path) for path in face_keyframe_paths]
+
         face_keyframe_layout = QHBoxLayout()
-        for img_path in face_keyframe_path_list:
-            print(img_path)
+        for img_path in face_keyframe_paths:
             pixmap = QPixmap(img_path)
             label_image = QLabel()
             label_image.setPixmap(pixmap)
