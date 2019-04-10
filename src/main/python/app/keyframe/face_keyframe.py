@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 class FaceKeyframe: 
     def __init__(self):
         self.face_detector = FaceDetector(detector='mtcnn')
-        self.IMG_SIZE = (60, 60)
+        self.FACE_IMG_SIZE = (40, 60)
 
     def _normalize_keypoints(self, point, x, y):
         return (point[0] - x, point[1] - y)
@@ -18,7 +18,7 @@ class FaceKeyframe:
     def face_keyframe_check(self, filename, lower_threshold, higher_threshold):
         img = cv.imread(filename)
         if img is not None:
-            img = cv.resize(cv.cvtColor(img, cv.COLOR_BGR2RGB), self.IMG_SIZE, interpolation=cv.INTER_AREA)
+            img = cv.cvtColor(img, cv.COLOR_BGR2RGB)
             face_and_landmark = self.face_detector.detect_and_extract_landmark(img)
             if face_and_landmark is not None:
                 x, y, w, h = face_and_landmark['box']
@@ -39,6 +39,8 @@ class FaceKeyframe:
                 dX = re_pos[0] - le_pos[0]
                 dY = re_pos[1] - le_pos[1]
                 angle = np.degrees(np.arctan2(dY, dX))
+
+                cropped_img = cv.resize(cropped_img, self.FACE_IMG_SIZE, interpolation=cv.INTER_AREA)
                 if angle >= lower_threshold and angle <= higher_threshold:
                     return (cropped_img, angle)
                 else:
