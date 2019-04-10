@@ -19,6 +19,10 @@ class ReidentificationThread(QThread):
         self.face_keyframe_output_dir_path = os.path.join(curr_dir_path, '../keyframe_output/')
         
         self.face_reidentification = FaceReidentification()
+        self.image_representation_database = []
+        self.image_representation_label = []
+        self.counter = 0
+        self.THRESHOLD = 80
         
     def run(self):
         while (True):
@@ -31,35 +35,38 @@ class ReidentificationThread(QThread):
                 
                 # Train and predict face keyframe
                 print('Reidentify', keyframe_id)
-                if self.face_reidentification.is_not_trained():
-                    print('First Train', keyframe_id)
-                    self.face_reidentification.init_train_model(classifier='svm')
-                    self.update_display_trigger.emit(self.face_reidentification.keyframe_person_dict[keyframe_id], keyframe_id)
-                    # self.update_time_trigger.emit(self.face_reidentification.keyframe_person_dict[keyframe_id], keyframe_id)
-                else:
-                    print('Predict', keyframe_id)
-                    predicted_proba = self.face_reidentification.predict_batch(keyframe_id, classifier='svm', return_proba=True)
-                    if predicted_proba is None:
-                        print('No Face Found', keyframe_id)
-                    else:
-                        print('Face Found', keyframe_id)
-                        confidence_arr = np.max(predicted_proba, axis=0) # column
-                        print(confidence_arr, keyframe_id)
-                        
-                        # Check Confidence below threshold
-                        is_confidence_below_threshold = True
-                        for confidence in confidence_arr[1:]:
-                            if confidence > 0.7:
-                                is_confidence_below_threshold = False
-                                break
+                features = self.face_reidentification.extract_feature_from_keyframes(self.face_keyframe_output_dir_path, keyframe_id)
+                predictions = self.face_reidentification.predict_batch(self.image_representation_database, self.image_representation_label, features, self.THRESHOLD)
+                print('Predictions', predictions)
+                majority = self._find_majority(predictions)
+                print('Majority', majority)
+                if majority[0] == None: # new person
+                    print('New Person')
+                    self.counter += 1
+                    self.image_representation_database.append(features)
+                    self.image_representation_label.append(self.counter)
+                    self.update_display_trigger.emit(self.counter, keyframe_id)
+                else: # existing person
+                    print('Existing Person', majority[0])
+                    self.image_representation_database.append(features)
+                    self.image_representation_label.append(majority[0])
+                    self.update_display_trigger.emit(majority[0], keyframe_id)
 
-                        if confidence_arr[0] > 0.7 or is_confidence_below_threshold: # new person
-                            print('New Person Update', keyframe_id)
-                            self.face_reidentification.update_model(keyframe_id, classifier='svm')
-                            self.update_display_trigger.emit(self.face_reidentification.keyframe_person_dict[keyframe_id], keyframe_id)
-                        else: # existing person
-                            predicted = np.argmax(confidence_arr)
-                            print('Existing Person', keyframe_id, predicted)
+
+                
+
+    def _find_majority(self, list_):
+        map = {}
+        maximum = (None, 0)
+        for elmt in list_:
+            if elmt in map: 
+                map[elmt] += 1
+            else: 
+                map[elmt] = 1
+
+            if map[elmt] > maximum[1]:
+                maximum = (elmt, map[elmt])
+        return maximum
 
     @pyqtSlot(int)
     def set_person_id(self, value):
