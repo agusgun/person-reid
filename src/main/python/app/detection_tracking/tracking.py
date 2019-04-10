@@ -13,5 +13,5 @@ class Tracking:
         model_filename = os.path.join(package_path, '../model_data/mars-small128.pb')
         self.encoder = gdet.create_box_encoder(model_filename)
         metric = nn_matching.NearestNeighborDistanceMetric("cosine", max_cosine_distance, nn_budget)
-        self.max_age = 10
+        self.max_age = 30
         self.tracker = Tracker(metric, max_age=self.max_age)
