@@ -49,10 +49,30 @@ class FaceReidentification:
                     minimum_label = image_representation_label[idx]
         print(minimum_label, minimum_distance)
         return minimum_label
-        
+    
+    def predict_and_find_match(self, image_representation_database, image_paths, image_representation_label, feature, min_distance):
+        minimum_label = None
+        minimum_distance = min_distance
+        minimum_path = os.path.join(os.path.dirname(__file__), '../assets/default_none.png')
+
+        for idx, image_representations in enumerate(image_representation_database):
+            for idx2, image_representation in enumerate(image_representations):
+                distance = euclidean(image_representation, feature)
+                if distance < minimum_distance:
+                    minimum_distance = distance
+                    minimum_label = image_representation_label[idx]
+                    minimum_path = image_paths[idx][idx2]
+        print('PNFM', minimum_label, minimum_distance, minimum_path)
+        return (minimum_label, minimum_path)
 
     def predict_batch(self, image_representation_database, image_representation_label, features, min_distance):
         predictions = []
         for feature in features:
             predictions.append(self.predict(image_representation_database, image_representation_label, feature, min_distance))
+        return predictions
+
+    def predict_and_find_match_batch(self, image_representation_database, image_paths, image_representation_label, features, min_distance):
+        predictions = []
+        for feature in features:
+            predictions.append(self.predict_and_find_match(image_representation_database, image_paths, image_representation_label, feature, min_distance))
         return predictions

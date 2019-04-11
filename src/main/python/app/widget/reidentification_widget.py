@@ -1,4 +1,4 @@
-from PyQt5.QtCore import Qt, pyqtSlot
+from PyQt5.QtCore import Qt, pyqtSlot, QVariant
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import QLabel, QScrollArea, QHBoxLayout, QVBoxLayout, QWidget
 import os
@@ -16,8 +16,8 @@ class ReidentificationWidget(QScrollArea):
         self.setWidget(widget)
         self.setWidgetResizable(True)
     
-    @pyqtSlot(int, int)
-    def add_new_person(self, person_id, keyframe_id):
+    @pyqtSlot(int, int, QVariant)
+    def add_new_person(self, person_id, keyframe_id, matching_image_paths):
         person_layout = QVBoxLayout()
         person_layout.addWidget(QLabel('Person %02d' % person_id))
         
@@ -32,6 +32,14 @@ class ReidentificationWidget(QScrollArea):
             label_image.setPixmap(pixmap)
             face_keyframe_layout.addWidget(label_image)
         person_layout.addLayout(face_keyframe_layout)
+
+        matching_face_keyframe_layout = QHBoxLayout()
+        for img_path in matching_image_paths:
+            pixmap = QPixmap(img_path)
+            label_image = QLabel()
+            label_image.setPixmap(pixmap)
+            matching_face_keyframe_layout.addWidget(label_image)
+        person_layout.addLayout(matching_face_keyframe_layout)
 
         curr_datetime = str(datetime.datetime.now())
         person_layout.addWidget(QLabel('Keyframe ID %02d on %s' % (keyframe_id, curr_datetime)))
