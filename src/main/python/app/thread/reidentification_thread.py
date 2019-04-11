@@ -43,19 +43,20 @@ class ReidentificationThread(QThread):
                 
                 majority = self._find_majority_prediction_match(prediction_matches)
                 print('Majority', majority)
-                if majority[0] == None: # new person
-                    print('New Person')
-                    self.counter += 1
-                    self.image_representation_database.append(features)
-                    self.image_representation_label.append(self.counter)
-                    self.image_representation_paths.append(image_paths)
-                    self.update_display_trigger.emit(self.counter, keyframe_id, [prediction[1] for prediction in prediction_matches])
-                else: # existing person
-                    print('Existing Person', majority[0])
-                    self.image_representation_database.append(features)
-                    self.image_representation_label.append(majority[0])
-                    self.image_representation_paths.append(image_paths)
-                    self.update_display_trigger.emit(majority[0], keyframe_id, [prediction[1] for prediction in prediction_matches])
+                if majority[1] != 0: # no keyframe found
+                    if majority[0] == None: # new person
+                        print('New Person')
+                        self.counter += 1
+                        self.image_representation_database.append(features)
+                        self.image_representation_label.append(self.counter)
+                        self.image_representation_paths.append(image_paths)
+                        self.update_display_trigger.emit(self.counter, keyframe_id, [prediction[1] for prediction in prediction_matches])
+                    else: # existing person
+                        print('Existing Person', majority[0])
+                        self.image_representation_database.append(features)
+                        self.image_representation_label.append(majority[0])
+                        self.image_representation_paths.append(image_paths)
+                        self.update_display_trigger.emit(majority[0], keyframe_id, [prediction[1] for prediction in prediction_matches])
 
     def _find_majority_prediction(self, predictions):
         map = {}
