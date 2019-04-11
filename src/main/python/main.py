@@ -7,6 +7,9 @@ from PyQt5.QtWidgets import QAction, QApplication, QMainWindow, QVBoxLayout, QWi
 from PyQt5.QtGui import QIcon
 
 import sys
+import argparse
+import os
+import shutil
 
 class MainWindow(QMainWindow):
     def __init__(self, parent=None):
@@ -64,6 +67,18 @@ class AppContext(ApplicationContext):           # 1. Subclass ApplicationContext
         return self.app.exec_()                 # 3. End run() with this line
 
 if __name__ == '__main__':
+    curr_dir_path = os.path.dirname(__file__)
+    keyframe_dir_path = os.path.join(curr_dir_path, 'app/keyframe_output')
+    frame_dir_path = os.path.join(curr_dir_path, 'app/frame_output')
+    
+    keyframe_paths = [os.path.join(keyframe_dir_path, path) for path in os.listdir(keyframe_dir_path)]
+    frame_paths = [os.path.join(frame_dir_path, path) for path in os.listdir(frame_dir_path)]
+    
+    for path in keyframe_paths:
+        shutil.rmtree(path)
+    for path in frame_paths:
+        shutil.rmtree(path)
+
     appctxt = AppContext()                      # 4. Instantiate the subclass
     exit_code = appctxt.run()                   # 5. Invoke run()
     sys.exit(exit_code)
