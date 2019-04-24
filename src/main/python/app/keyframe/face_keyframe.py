@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 class FaceKeyframe: 
     def __init__(self):
         self.face_detector = FaceDetector(detector='mtcnn')
-        self.FACE_IMG_SIZE = (40, 60)
+        self.FACE_IMG_SIZE = (60, 60)
 
     def _normalize_keypoints(self, point, x, y):
         return (point[0] - x, point[1] - y)
