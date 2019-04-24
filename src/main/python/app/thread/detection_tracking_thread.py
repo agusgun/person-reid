@@ -105,6 +105,10 @@ class DetectionTrackingThread(QThread):
                 convertToQtFormat = QImage(rgbImage.data, rgbImage.shape[1], rgbImage.shape[0], QImage.Format_RGB888)
                 p = convertToQtFormat.scaled(800, 600, Qt.KeepAspectRatio)
                 self.changePixmap.emit(p)
+            else: # when no frame extracted but re-identification still in progress
+                for track in self.tracking.tracker.tracks:
+                    if track.time_since_update == self.tracking.max_age:
+                        self.change_person_id.emit(track.track_id)
                 
     def signal_start(self):
         self.is_running = True
