@@ -31,11 +31,19 @@ class MainWindow(QMainWindow):
         exit_action.setStatusTip('Exit application')
         exit_action.triggered.connect(self.exit_call)
 
+        direct_re_identification_action = QAction(QIcon('direct.png'), '&Direct Re-identification', self, checkable=True)
+        direct_re_identification_action.setShortcut('Ctrl+D')
+        direct_re_identification_action.setStatusTip('Direct Re-identification without Tracking')
+        direct_re_identification_action.triggered.connect(self.toggle_config)
+
         menu_bar = self.menuBar()
         file_menu = menu_bar.addMenu('&File')
         file_menu.addAction(use_camera_action)
         file_menu.addAction(open_action)
         file_menu.addAction(exit_action)
+
+        config_menu = menu_bar.addMenu('&Config')
+        config_menu.addAction(direct_re_identification_action)
 
         self.tabs = TabWidget()
 
@@ -56,6 +64,12 @@ class MainWindow(QMainWindow):
 
     def exit_call(self):
         sys.exit(app.exec_())
+
+    def toggle_config(self, state):
+        if state: # Direct reidentification
+            print('Direct')
+        else:
+            print('Non Direct')
 
 class AppContext(ApplicationContext):           # 1. Subclass ApplicationContext
     def run(self):                              # 2. Implement run()
