@@ -63,13 +63,14 @@ class MainWindow(QMainWindow):
         self.tabs.detection_tracking_tab.th_detection_tracking.signal_start()
 
     def exit_call(self):
-        sys.exit(app.exec_())
+        sys.exit(appctxt.app.exec_())
 
     def toggle_config(self, state):
+        print(os.environ['PERSON_REID_DIRECT_REIDENTIFICATION'])
         if state: # Direct reidentification
-            print('Direct')
+            os.environ['PERSON_REID_DIRECT_REIDENTIFICATION'] = 'True' 
         else:
-            print('Non Direct')
+            os.environ['PERSON_REID_DIRECT_REIDENTIFICATION'] = ''
 
 class AppContext(ApplicationContext):           # 1. Subclass ApplicationContext
     def run(self):                              # 2. Implement run()
