@@ -64,3 +64,40 @@ class FaceDetector:
             return None
         else:
             print('The detector not implemented')
+
+    def detect_all_and_extract_landmark(self, img):
+        '''
+        Return first position of face found in format (x, y, w, h)->(left, top, width, height)
+        '''
+        if self.detector_type == 'mtcnn':
+            detection_alignment_results = self.detector.detect_faces(img)
+            return detection_alignment_results
+        elif self.detector_type == 'dlib_hog':
+            face_bboxes = self.detector(img, 1)
+            result = []
+            for face in face_bboxes:
+                x = face.left()
+                y = face.top()
+                w = face.right() - x
+                h = face.bottom() - y
+                
+                bbox_rectangle = face
+                facial_landmark_position = self.landmark_extractor(img, bbox_rectangle)
+                facial_landmark_position = face_utils.shape_to_np(facial_landmark_position)
+
+                result.append((x, y, w, h), facial_landmark_position) 
+            return result
+        elif self.detector_type == 'cascade':
+            result = []
+            face_bboxes = self.detector.detectMultiScale(img, scaleFactor=1.1, minNeighbors=5)
+            for face in face_bboxes:
+                x, y, w, h = face
+                
+                bbox_rectangle = dlib.rectangle(x, y, x+w, y+h)
+                facial_landmark_position = self.landmark_extractor(img, bbox_rectangle)
+                facial_landmark_position = face_utils.shape_to_np(facial_landmark_position)
+
+                result.append((x, y, w, h), facial_landmark_position)
+            return result
+        else:
+            print('The detector not implemented')
