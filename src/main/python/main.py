@@ -56,11 +56,17 @@ class MainWindow(QMainWindow):
 
     def use_camera(self):
         self.tabs.input_tab.input_widget.start_camera()
-        self.tabs.detection_tracking_tab.th_detection_tracking.signal_start()
+        if bool(os.environ['PERSON_REID_DIRECT_REIDENTIFICATION']):
+            self.tabs.detection_reidentification_tab.th_detection_reidentification.signal_start()
+        else:
+            self.tabs.detection_tracking_tab.th_detection_tracking.signal_start()
 
     def open_file(self):
         self.tabs.input_tab.input_widget.start_video()
-        self.tabs.detection_tracking_tab.th_detection_tracking.signal_start()
+        if bool(os.environ['PERSON_REID_DIRECT_REIDENTIFICATION']):
+            self.tabs.detection_reidentification_tab.th_detection_reidentification.signal_start()
+        else:
+            self.tabs.detection_tracking_tab.th_detection_tracking.signal_start()
 
     def exit_call(self):
         sys.exit(appctxt.app.exec_())
