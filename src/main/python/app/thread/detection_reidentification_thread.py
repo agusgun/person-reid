@@ -1,5 +1,5 @@
 from app.deep_sort.detection import Detection as ddet
-from app.detection_tracking.detection import Detection
+from app.keyframe.face_detector import FaceDetector
 import cv2 as cv
 import os
 from pydarknet import Image
@@ -15,7 +15,7 @@ class DetectionReidentificationThread(QThread):
         super().__init__()
         self.is_running = True
         self.input_thread = input_thread
-        self.detection = Detection()
+        self.face_detector = FaceDetector(detector='mtcnn')
         self.person_iterator_dict = dict()
         self.counter = 0
         
@@ -26,16 +26,25 @@ class DetectionReidentificationThread(QThread):
                 start_time = time.time()
 
                 # Detection Stuff Here
-                dark_frame = Image(frame)
-                outs = self.detection.net.detect(dark_frame, thresh=self.detection.confThreshold, nms=self.detection.nmsThreshold)
-                del dark_frame
+                face_landmarks = self.face_detector.detect_all_and_extract_landmark(frame)
+                for face_landmark in face_landmarks:
+                    x, y, w, h = face_landmark['box']
+                    if x < 0:
+                        x = 0
+                    if y < 0:
+                        y = 0
+                    cv.rectangle(frame, (int(x), int(y)), (int(x+w), int(y+h)), (255,255,255), 2)
+
+                # dark_frame = Image(frame)
+                # outs = self.detection.net.detect(dark_frame, thresh=self.detection.confThreshold, nms=self.detection.nmsThreshold)
+                # del dark_frame
                 
-                # Remove the bounding boxes with low confidence
-                bboxes_for_detection = self.detection.postprocess(frame, outs)
-                self.counter += 1
-                for bbox in bboxes_for_detection:
-                    left, top, width, height = bbox
-                    cv.rectangle(frame, (int(left), int(top)), (int(left + width), int(top+height)), (255,255,255), 2)
+                # # Remove the bounding boxes with low confidence
+                # bboxes_for_detection = self.detection.postprocess(frame, outs)
+                # self.counter += 1
+                # for bbox in bboxes_for_detection:
+                #     left, top, width, height = bbox
+                #     cv.rectangle(frame, (int(left), int(top)), (int(left + width), int(top+height)), (255,255,255), 2)
 
                 end_time = time.time()
                 # Put efficiency information

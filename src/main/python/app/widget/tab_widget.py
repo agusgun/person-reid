@@ -22,7 +22,7 @@ class TabWidget(QWidget):
             self.tabs.addTab(self.detection_tracking_tab, "Detection and Tracking")
             self.tabs.addTab(self.reid_tab, "Re-identification")
             self.detection_tracking_tab.th_detection_tracking.change_person_id.connect(
-            self.reid_tab.th_reidentification.set_person_id)
+                self.reid_tab.th_reidentification.set_person_id)
 
         layout = QVBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
