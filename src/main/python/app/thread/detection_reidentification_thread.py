@@ -1,4 +1,5 @@
 from app.deep_sort.detection import Detection as ddet
+from app.reidentification.face_reidentification import FaceReidentification
 from app.keyframe.face_detector import FaceDetector
 import cv2 as cv
 import os
@@ -9,15 +10,27 @@ import time
 
 class DetectionReidentificationThread(QThread):
     changePixmap = pyqtSignal(QImage)
-    change_person_id = pyqtSignal(int)
+    update_display_trigger = pyqtSignal(int, int, str)
     
     def __init__(self, input_thread):
         super().__init__()
         self.is_running = True
         self.input_thread = input_thread
+        
+        # Detection
         self.face_detector = FaceDetector(detector='mtcnn')
-        self.person_iterator_dict = dict()
-        self.counter = 0
+
+        # Reidentification
+        self.keyframe_id_counter = 0
+        self.label_counter = 0
+        self.image_representation_database = []
+        self.image_representation_label = []
+        self.image_representation_paths = []
+        self.face_reidentification = FaceReidentification()
+        self.THRESHOLD = 80
+        self.FACE_IMG_SIZE = (60, 60)
+        curr_dir_path = os.path.dirname(__file__)
+        self.face_keyframe_output_dir_path = os.path.join(curr_dir_path, '../keyframe_output/')
         
     def run(self):
         while True and self.is_running:
@@ -33,18 +46,35 @@ class DetectionReidentificationThread(QThread):
                         x = 0
                     if y < 0:
                         y = 0
-                    cv.rectangle(frame, (int(x), int(y)), (int(x+w), int(y+h)), (255,255,255), 2)
+                    if h > 60:
+                        cropped_img = frame[y:y+h, x:x+w]
+                        cv.rectangle(frame, (int(x), int(y)), (int(x+w), int(y+h)), (255,0,0), 2)
+                        
+                        # Extract feature
+                        feature = self.face_reidentification.extract_feature_from_image(cropped_img)
+                        self.keyframe_id_counter += 1
+                        keyframe_image_path = os.path.join(self.face_keyframe_output_dir_path, str(self.keyframe_id_counter) + '.png')
+                        cropped_img = cv.resize(cropped_img, self.FACE_IMG_SIZE, interpolation=cv.INTER_AREA)
+                        cv.imwrite(keyframe_image_path, cropped_img)
 
-                # dark_frame = Image(frame)
-                # outs = self.detection.net.detect(dark_frame, thresh=self.detection.confThreshold, nms=self.detection.nmsThreshold)
-                # del dark_frame
-                
-                # # Remove the bounding boxes with low confidence
-                # bboxes_for_detection = self.detection.postprocess(frame, outs)
-                # self.counter += 1
-                # for bbox in bboxes_for_detection:
-                #     left, top, width, height = bbox
-                #     cv.rectangle(frame, (int(left), int(top)), (int(left + width), int(top+height)), (255,255,255), 2)
+                        # Predict
+                        prediction_match = self.face_reidentification.predict_and_find_match_single(self.image_representation_database, 
+                            self.image_representation_paths, self.image_representation_label, feature, self.THRESHOLD)
+                        minimum_label, minimum_path = prediction_match
+
+                        # Add to galery
+                        self.image_representation_database.append(feature)
+                        self.image_representation_paths.append(keyframe_image_path)
+                        if minimum_label is None: # Predicted as new
+                            self.label_counter += 1
+                            self.image_representation_label.append(self.label_counter)
+                            self.update_display_trigger.emit(self.label_counter, self.keyframe_id_counter, minimum_path)
+                        else: # Predicted as old
+                            self.image_representation_label.append(minimum_label)
+                            self.update_display_trigger.emit(minimum_label, self.keyframe_id_counter, minimum_path)
+                    else:
+                        cv.rectangle(frame, (int(x), int(y)), (int(x+w), int(y+h)), (255,255,255), 2)
+
 
                 end_time = time.time()
                 # Put efficiency information
