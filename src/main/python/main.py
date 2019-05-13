@@ -96,10 +96,16 @@ if __name__ == '__main__':
     frame_paths = [os.path.join(frame_dir_path, path) for path in os.listdir(frame_dir_path)]
     
     for path in keyframe_paths:
-        shutil.rmtree(path)
+        if os.path.isdir(path):
+            shutil.rmtree(path)
+        else:
+            os.remove(path)
     for path in frame_paths:
-        shutil.rmtree(path)
-
+        if os.path.isdir(path):
+            shutil.rmtree(path)
+        else:
+            os.remove(path)
+            
     appctxt = AppContext()                      # 4. Instantiate the subclass
     exit_code = appctxt.run()                   # 5. Invoke run()
     sys.exit(exit_code)
