@@ -96,5 +96,5 @@ class VGGFaceEmbedding:
             img = utils.preprocess_input(img, version=self.preprocess_version)
         else:
             img = preprocess_input(img)
-            
-        return self.descriptor.predict(img)[0]
+        with self.graph.as_default():
+            return self.descriptor.predict(img)[0]
