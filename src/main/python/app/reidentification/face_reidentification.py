@@ -30,13 +30,13 @@ class FaceReidentification:
         else:
             print('Feature extractor not implemented')
 
-    def extract_feature_from_keyframes(self, input_dir_path, keyframe_id,):
+    def extract_feature_from_keyframes(self, input_dir_path, keyframe_id):
         keyframe_dir_path = os.path.join(input_dir_path, str(keyframe_id))
         keyframe_file_paths = os.listdir(keyframe_dir_path)
         keyframe_file_paths = [os.path.join(keyframe_dir_path, path) for path in keyframe_file_paths]
         features = self.feature_extractor.extract_batch(keyframe_file_paths)
         return features
-
+        
     def predict(self, image_representation_database, image_representation_label, feature, min_distance):
         minimum_label = None
         minimum_distance = min_distance
@@ -76,3 +76,22 @@ class FaceReidentification:
         for feature in features:
             predictions.append(self.predict_and_find_match(image_representation_database, image_paths, image_representation_label, feature, min_distance))
         return predictions
+
+    # For Direct Reidentification
+    def extract_feature_from_image(self, image):
+        feature = self.feature_extractor.extract_image(image)
+        return feature
+    
+    def predict_and_find_match_single(self, image_representation_database, image_paths, image_representation_label, feature, min_distance):
+        minimum_label = None
+        minimum_distance = min_distance
+        minimum_path = os.path.join(os.path.dirname(__file__), '../assets/default_none.png')
+
+        for idx, image_representation in enumerate(image_representation_database):
+            distance = euclidean(image_representation, feature)
+            if distance < minimum_distance:
+                minimum_distance = distance
+                minimum_label = image_representation_label[idx]
+                minimum_path = image_paths[idx]
+        print('PNFMS ML MD MP', minimum_label, minimum_distance, minimum_path)
+        return (minimum_label, minimum_path)
