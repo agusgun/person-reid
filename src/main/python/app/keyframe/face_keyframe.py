@@ -60,8 +60,8 @@ class FaceKeyframe:
             MAX = 100
 
             face_images = []
-            LOWER_THRESHOLD = -5
-            HIGHER_THRESHOLD = 5
+            LOWER_THRESHOLD = -10
+            HIGHER_THRESHOLD = 10
             for file_path in file_paths[:MAX]:
                 face_img = self.face_keyframe_check(file_path, LOWER_THRESHOLD, HIGHER_THRESHOLD)
                 if face_img is not None:
