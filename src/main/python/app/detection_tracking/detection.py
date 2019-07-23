@@ -13,7 +13,7 @@ class Detection:
         self.classesFile = os.path.join(package_path, "../model_data/coco.data")
         self.classesName = os.path.join(package_path, "../model_data/coco.names")
         self.classes = None
-        with open(self.classesFile, 'rt') as f:
+        with open(self.classesName, 'rt') as f:
             self.classes = f.read().rstrip('\n').split('\n')
         self.modelConfiguration = os.path.join(package_path, "../model_data/yolov3.cfg")
         self.modelWeights = os.path.join(package_path, "../model_data/yolov3.weights")

@@ -8,6 +8,20 @@ from PyQt5.QtCore import pyqtSignal, pyqtSlot, Qt, QThread
 from PyQt5.QtGui import QImage
 import time
 
+import platform
+system_platform = platform.system()
+
+if bool(os.environ['USE_GPU']):
+    USE_GPU = True
+else:
+    USE_GPU = False     
+
+if system_platform == 'Linux' and USE_GPU:
+    from app.detection_tracking.detection import Detection
+else:
+    from app.detection_tracking.detection_opencv import DetectionOpenCV
+print(system_platform)
+
 def bb_intersection_over_union(boxA, boxB):
     # determine the (x, y)-coordinates of the intersection rectangle
     xA = max(boxA[0], boxB[0])
@@ -39,7 +53,10 @@ class DetectionTrackingThread(QThread):
         super().__init__()
         self.is_running = True
         self.input_thread = input_thread
-        self.detection = Detection()
+        if system_platform == 'Linux' and USE_GPU:
+            self.detection = Detection()
+        else:
+            self.detection = DetectionOpenCV()
         self.tracking = Tracking()
         self.person_iterator_dict = dict()
         
@@ -50,15 +67,18 @@ class DetectionTrackingThread(QThread):
                 start_time = time.time()
 
                 # Detection Stuff Here
-                dark_frame = Image(frame)
-                outs = self.detection.net.detect(dark_frame, thresh=self.detection.confThreshold, nms=self.detection.nmsThreshold)
-                del dark_frame
-                
+                if system_platform == 'Linux' and USE_GPU:
+                    dark_frame = Image(frame)
+                    outs = self.detection.net.detect(dark_frame, thresh=self.detection.confThreshold, nms=self.detection.nmsThreshold)
+                else:
+                    blob = cv.dnn.blobFromImage(frame, 1/255, (self.detection.inpWidth, self.detection.inpHeight), [0,0,0], 1, crop=False)
+                    self.detection.net.setInput(blob)
+                    outs = self.detection.net.forward(self.detection.getOutputsNames(self.detection.net))
+
                 # Remove the bounding boxes with low confidence
                 boxes_for_tracking = self.detection.postprocess(frame, outs)
                 features = self.tracking.encoder(frame, boxes_for_tracking)
                 detections = [ddet(bbox, 1.0, feature) for bbox, feature in zip(boxes_for_tracking, features)]
-
                 self.tracking.tracker.predict()
                 self.tracking.tracker.update(detections)
 
@@ -73,7 +93,8 @@ class DetectionTrackingThread(QThread):
                     for idx_det, det in enumerate(detections):
                         bbox_detection = det.to_tlbr()
                         bbox_tracking = track.to_tlbr()
-
+                        if system_platform != 'Linux' or not(USE_GPU):
+                            self.detection.drawPred(frame, 'Human', 101, int(bbox_detection[0]), int(bbox_detection[1]), int(bbox_detection[2]), int(bbox_detection[3]))
                         if bb_intersection_over_union(bbox_detection, bbox_tracking) > 0.5:
                             del detections[idx_det]
                             # Check if the left of tracking position is still in the frame (if not will crop empty image) TODO: better handler
