@@ -19,7 +19,7 @@ class InputThread(QThread):
                 convertToQtFormat = QImage(rgbImage.data, rgbImage.shape[1], rgbImage.shape[0], QImage.Format_RGB888)
                 p = convertToQtFormat.scaled(800, 600, Qt.KeepAspectRatio)
                 self.changePixmap.emit(p)
-                self.msleep(60)
+                self.msleep(30)
         print('Cap Rel')
         self.cap.release()
 
@@ -34,9 +34,11 @@ class InputThread(QThread):
 
     def change_input2video(self):
         self.cap = cv.VideoCapture(self.file_name)
+        print(self.cap.get(cv.CAP_PROP_FPS), self.cap.get(cv.CAP_PROP_FRAME_COUNT))
 
     def change_input2camera(self):
         self.cap = cv.VideoCapture(0)
+        # print(self.cap.get(cv.CAP_PROP_FPS), self.cap.get(cv.CAP_PROP_FRAME_COUNT))
 
     def signal_start(self):
         self.is_running = True
