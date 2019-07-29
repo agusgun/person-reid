@@ -40,15 +40,15 @@ Create symlink using this command:
 - [ ] [MTCNN](TODO)
 
 #### Keyframe Extraction
-1. Using thresholding on facial landmark size (Face image need to be resized first for measure the threshold)
+1. Using thresholding on facial landmark size (Face image need to be resized first to measure the threshold)
 - Using heuristic to determine the threshold
-- [TODO] Need to determine the necessary training sample for the keyfram extraction (Assumption: 5-10 keyframe per person)
+- [TODO] Need to determine the necessary training sample for the keyframe extraction (Assumption: 5-10 keyframe per person)
 - Assumption: Person Detection Accurate
 - Assumption: Face Detection Accurate
 
 2. Using confidence from MTCNN
 
-### Apperance Model
+### Appearance Model
 
 
 # Thesis Progress
