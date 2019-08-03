@@ -1,9 +1,7 @@
 from app.deep_sort.detection import Detection as ddet
-from app.detection_tracking.detection import Detection
 from app.detection_tracking.tracking import Tracking
 import cv2 as cv
 import os
-from pydarknet import Image
 from PyQt5.QtCore import pyqtSignal, pyqtSlot, Qt, QThread
 from PyQt5.QtGui import QImage
 import time
@@ -18,6 +16,7 @@ else:
 
 if system_platform == 'Linux' and USE_GPU:
     from app.detection_tracking.detection import Detection
+    from pydarknet import Image
 else:
     from app.detection_tracking.detection_opencv import DetectionOpenCV
 print(system_platform)

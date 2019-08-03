@@ -5,7 +5,6 @@ import numpy as np
 import os
 from scipy.spatial import distance
 from .face_detector import FaceDetector
-import matplotlib.pyplot as plt
 
 class FaceKeyframe: 
     def __init__(self):

@@ -3,7 +3,6 @@ from app.reidentification.face_reidentification import FaceReidentification
 from app.keyframe.face_detector import FaceDetector
 import cv2 as cv
 import os
-from pydarknet import Image
 from PyQt5.QtCore import pyqtSignal, pyqtSlot, Qt, QThread
 from PyQt5.QtGui import QImage
 import time
