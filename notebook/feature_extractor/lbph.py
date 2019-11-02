@@ -4,7 +4,7 @@ import cv2 as cv
 class LBPHFeatureExtractor:
     def __init__(self):
         self.extractor = SpatialHistogram()
-        self.img_size = (60, 60)
+        self.img_size = (64, 64)
         
     def extract(self, img_path):
         gray_img = cv.imread(img_path, cv.IMREAD_GRAYSCALE)
