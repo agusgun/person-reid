@@ -16,26 +16,30 @@ class ReidentificationPanelWidget(QScrollArea):
         self.setWidget(widget)
         self.setWidgetResizable(True)
         
-    @pyqtSlot(int, int, str)
-    def add_new_person(self, person_id, keyframe_id, matching_image_path):        
+    @pyqtSlot(int, int, QVariant)
+    def add_new_person(self, person_id, keyframe_id, matching_image_paths):        
         person_layout = QVBoxLayout()
         person_layout.addWidget(QLabel('Person %02d' % person_id))
         
-        face_keyframe_path = os.path.join(self.input_dir_path, str(keyframe_id) + '.png')
-        
-        face_keyframe_match_layout = QHBoxLayout()
+        face_keyframe_dir_path = os.path.join(self.input_dir_path, str(keyframe_id))
+        face_keyframe_paths = os.listdir(face_keyframe_dir_path)
+        face_keyframe_paths = [os.path.join(face_keyframe_dir_path, path) for path in face_keyframe_paths]
 
-        keyframe_pixmap = QPixmap(face_keyframe_path)
-        label_image = QLabel()
-        label_image.setPixmap(keyframe_pixmap)
-        face_keyframe_match_layout.addWidget(label_image)
-        
-        matched_pixmap = QPixmap(matching_image_path)
-        label_image = QLabel()
-        label_image.setPixmap(matched_pixmap)
-        face_keyframe_match_layout.addWidget(label_image)
+        face_keyframe_layout = QHBoxLayout()
+        for img_path in face_keyframe_paths:
+            pixmap = QPixmap(img_path)
+            label_image = QLabel()
+            label_image.setPixmap(pixmap)
+            face_keyframe_layout.addWidget(label_image)
+        person_layout.addLayout(face_keyframe_layout)
 
-        person_layout.addLayout(face_keyframe_match_layout)
+        matching_face_keyframe_layout = QHBoxLayout()
+        for img_path in matching_image_paths:
+            pixmap = QPixmap(img_path)
+            label_image = QLabel()
+            label_image.setPixmap(pixmap)
+            matching_face_keyframe_layout.addWidget(label_image)
+        person_layout.addLayout(matching_face_keyframe_layout)
 
         curr_datetime = str(datetime.datetime.now())
         person_layout.addWidget(QLabel('Keyframe ID %02d on %s' % (keyframe_id, curr_datetime)))

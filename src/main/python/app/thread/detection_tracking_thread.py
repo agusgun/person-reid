@@ -112,7 +112,7 @@ class DetectionTrackingThread(QThread):
                                 frame_output_file_path = os.path.join(person_id_dir_path, str(self.person_iterator_dict[track.track_id]) + '.png')        
                                 
                                 cv.imwrite(os.path.join(frame_output_file_path), cropped_img)
-
+                                
                             cv.rectangle(frame, (int(bbox_detection[0]), int(bbox_detection[1])), (int(bbox_detection[2]), int(bbox_detection[3])), (255,255,255), 2)
                             cv.putText(frame, str(track.track_id),(int(bbox_detection[0]), int(bbox_detection[1])), 0, 5e-3 * 200, (0,255,0), 2)
 

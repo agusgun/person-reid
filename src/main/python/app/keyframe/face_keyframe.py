@@ -40,10 +40,11 @@ class FaceKeyframe:
                 angle = np.degrees(np.arctan2(dY, dX))
 
                 cropped_img = cv.resize(cropped_img, self.FACE_IMG_SIZE, interpolation=cv.INTER_AREA)
-                if angle >= lower_threshold and angle <= higher_threshold:
-                    return (cropped_img, angle)
-                else:
-                    return None
+                return (cropped_img, angle)
+                # if angle >= lower_threshold and angle <= higher_threshold:
+                #     return (cropped_img, angle)
+                # else:
+                #     return None
             else:
                 return None
         else:
@@ -65,6 +66,8 @@ class FaceKeyframe:
                 face_img = self.face_keyframe_check(file_path, LOWER_THRESHOLD, HIGHER_THRESHOLD)
                 if face_img is not None:
                     face_images.append(face_img)
+                if len(face_images) == 10:
+                    break
             
             keyframe_output_dir_path = os.path.join(output_dir_path, str(person_id))
             if not os.path.exists(keyframe_output_dir_path):
