@@ -162,7 +162,7 @@ class DetectionReidentificationThread(QThread):
                                             self.image_representation_database.append(features)
                                             self.image_representation_label.append(majority[0])
                                             self.image_representation_paths.append(image_paths)
-                                            self.update_display_trigger.emit(self.counter, track_id, [prediction[1] for prediction in prediction_matches])
+                                            self.update_display_trigger.emit(majority[0], track_id, [prediction[1] for prediction in prediction_matches])
 
                                 cv.rectangle(frame, (int(track[0]), int(track[1])), (int(track[2]), int(track[3])), (0, 255, 0), 2)
                             else:        
